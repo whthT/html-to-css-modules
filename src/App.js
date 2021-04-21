@@ -52,7 +52,7 @@ function App() {
           `className={${helperPattern.replace("$", "'$1'")}}`
         )
       );
-    }, 1000);
+    }, liveCode.length > 2000 ? 1000 : 200);
   }, [liveCode, createClass, outputClassName, helperPattern]);
   return (
     <div className={css.App}>
