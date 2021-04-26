@@ -1,8 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import HTMLtoJSX from "htmltojsx";
 import css from "./App.module.scss";
+import pretty from "pretty"
 function App() {
   const outputClassNameEl = useRef(null);
+  const generatedEl = useRef(null)
+  const copyEl = useRef(null)
   const [createClass, setCreateClass] = useState(window.localStorage.getItem('createClass') === "false" ? false : true);
   const [outputClassName, setOutputClassName] = useState(window.localStorage.getItem('outputClassName') || "AwesomeComponent");
   const [helperPattern, setHelperPattern] = useState(window.localStorage.getItem('helperPattern') || "css($)");
@@ -33,7 +36,7 @@ function App() {
   <p>Enter your HTML here</p>
   `);
 
-  const [compiledCode, setCompiledCode] = useState("");
+  const [generatedCode, setGeneratedCode] = useState("");
 
   useEffect(() => {
     if (window.__timeout !== null) {
@@ -45,8 +48,8 @@ function App() {
         createClass,
         outputClassName,
       });
-      var output = converter.convert(liveCode);
-      setCompiledCode(
+      var output = converter.convert(pretty(liveCode, {ocd: true}));
+      setGeneratedCode(
         output.replace(
           /className\=\"(.*?)\"/gm,
           `className={${helperPattern.replace("$", "'$1'")}}`
@@ -54,6 +57,17 @@ function App() {
       );
     }, liveCode.length > 2000 ? 1000 : 200);
   }, [liveCode, createClass, outputClassName, helperPattern]);
+
+  function copy() {
+    generatedEl.current.select(0, 9999)
+    document.execCommand('copy')
+    generatedEl.current.select(0, 0)
+    copyEl.current.textContent = 'Copied!'
+    setTimeout(() => {
+      copyEl.current.textContent = 'Copy'
+    }, 1000)
+  }
+
   return (
     <div className={css.App}>
       <h1>HTML to CSS Modules</h1>
@@ -91,15 +105,15 @@ function App() {
       </div>
       <div className={css.Row}>
         <div>
-          <h5>Live</h5>
+          <h5>Live <button onClick={() => setLiveCode('')}>Clear</button></h5>
           <textarea
             value={liveCode}
             onChange={(e) => setLiveCode(e.target.value)}
           ></textarea>
         </div>
         <div>
-          <h5>Compiled</h5>
-          <textarea value={compiledCode}></textarea>
+          <h5>Generated <button ref={copyEl} onClick={copy}>Copy</button></h5>
+          <textarea ref={generatedEl} value={generatedCode}></textarea>
         </div>
       </div>
     </div>
